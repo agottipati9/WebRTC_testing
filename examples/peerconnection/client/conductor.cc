@@ -173,8 +173,8 @@ bool Conductor::InitializePeerConnection() {
   deps.signaling_thread = signaling_thread_.get();
   deps.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory(),
   // Note: test machines do not support audio processing yet.
-  // deps.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
-  // deps.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
+  deps.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
+  deps.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
   deps.video_encoder_factory =
       std::make_unique<webrtc::VideoEncoderFactoryTemplate<
           webrtc::LibvpxVp8EncoderTemplateAdapter,
@@ -505,16 +505,16 @@ void Conductor::AddTracks() {
   }
 
   // NOTE: test machines do not support audio processing yet.
-  // rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-  //     peer_connection_factory_->CreateAudioTrack(
-  //         kAudioLabel,
-  //         peer_connection_factory_->CreateAudioSource(cricket::AudioOptions())
-  //             .get()));
-  // auto result_or_error = peer_connection_->AddTrack(audio_track, {kStreamId});
-  // if (!result_or_error.ok()) {
-  //   RTC_LOG(LS_ERROR) << "Failed to add audio track to PeerConnection: "
-  //                     << result_or_error.error().message();
-  // }
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+      peer_connection_factory_->CreateAudioTrack(
+          kAudioLabel,
+          peer_connection_factory_->CreateAudioSource(cricket::AudioOptions())
+              .get()));
+  auto result_or_error = peer_connection_->AddTrack(audio_track, {kStreamId});
+  if (!result_or_error.ok()) {
+    RTC_LOG(LS_ERROR) << "Failed to add audio track to PeerConnection: "
+                      << result_or_error.error().message();
+  }
 
   rtc::scoped_refptr<CapturerTrackSource> video_device =
       CapturerTrackSource::Create(*task_queue_factory_);
@@ -523,7 +523,7 @@ void Conductor::AddTracks() {
         peer_connection_factory_->CreateVideoTrack(video_device, kVideoLabel));
     main_wnd_->StartLocalRenderer(video_track_.get());
 
-    auto result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
+    result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
     if (!result_or_error.ok()) {
       RTC_LOG(LS_ERROR) << "Failed to add video track to PeerConnection: "
                         << result_or_error.error().message();
