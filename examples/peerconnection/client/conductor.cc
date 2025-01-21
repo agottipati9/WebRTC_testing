@@ -94,19 +94,20 @@ std::unique_ptr<TestVideoCapturer> CreateCapturer(
   const size_t kWidth = 640;
   const size_t kHeight = 480;
   const size_t kFps = 30;
-  std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
-      webrtc::VideoCaptureFactory::CreateDeviceInfo());
-  if (!info) {
-    return nullptr;
-  }
-  int num_devices = info->NumberOfDevices();
-  for (int i = 0; i < num_devices; ++i) {
-    std::unique_ptr<TestVideoCapturer> capturer =
-        webrtc::test::CreateVideoCapturer(kWidth, kHeight, kFps, i);
-    if (capturer) {
-      return capturer;
-    }
-  }
+  // skip the device enumeration and just create a capturer with fake frames
+  // std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+  //     webrtc::VideoCaptureFactory::CreateDeviceInfo());
+  // if (!info) {
+  //   return nullptr;
+  // }
+  // int num_devices = info->NumberOfDevices();
+  // for (int i = 0; i < num_devices; ++i) {
+  //   std::unique_ptr<TestVideoCapturer> capturer =
+  //       webrtc::test::CreateVideoCapturer(kWidth, kHeight, kFps, i);
+  //   if (capturer) {
+  //     return capturer;
+  //   }
+  // }
   auto frame_generator = webrtc::test::CreateSquareFrameGenerator(
       kWidth, kHeight, std::nullopt, std::nullopt);
   return std::make_unique<webrtc::test::FrameGeneratorCapturer>(
@@ -171,8 +172,9 @@ bool Conductor::InitializePeerConnection() {
   webrtc::PeerConnectionFactoryDependencies deps;
   deps.signaling_thread = signaling_thread_.get();
   deps.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory(),
-  deps.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
-  deps.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
+  // Note: test machines do not support audio processing yet.
+  // deps.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
+  // deps.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
   deps.video_encoder_factory =
       std::make_unique<webrtc::VideoEncoderFactoryTemplate<
           webrtc::LibvpxVp8EncoderTemplateAdapter,
@@ -502,16 +504,17 @@ void Conductor::AddTracks() {
     return;  // Already added tracks.
   }
 
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-      peer_connection_factory_->CreateAudioTrack(
-          kAudioLabel,
-          peer_connection_factory_->CreateAudioSource(cricket::AudioOptions())
-              .get()));
-  auto result_or_error = peer_connection_->AddTrack(audio_track, {kStreamId});
-  if (!result_or_error.ok()) {
-    RTC_LOG(LS_ERROR) << "Failed to add audio track to PeerConnection: "
-                      << result_or_error.error().message();
-  }
+  // NOTE: test machines do not support audio processing yet.
+  // rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+  //     peer_connection_factory_->CreateAudioTrack(
+  //         kAudioLabel,
+  //         peer_connection_factory_->CreateAudioSource(cricket::AudioOptions())
+  //             .get()));
+  // auto result_or_error = peer_connection_->AddTrack(audio_track, {kStreamId});
+  // if (!result_or_error.ok()) {
+  //   RTC_LOG(LS_ERROR) << "Failed to add audio track to PeerConnection: "
+  //                     << result_or_error.error().message();
+  // }
 
   rtc::scoped_refptr<CapturerTrackSource> video_device =
       CapturerTrackSource::Create(*task_queue_factory_);
@@ -520,7 +523,7 @@ void Conductor::AddTracks() {
         peer_connection_factory_->CreateVideoTrack(video_device, kVideoLabel));
     main_wnd_->StartLocalRenderer(video_track_.get());
 
-    result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
+    auto result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
     if (!result_or_error.ok()) {
       RTC_LOG(LS_ERROR) << "Failed to add video track to PeerConnection: "
                         << result_or_error.error().message();
