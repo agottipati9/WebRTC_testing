@@ -790,6 +790,8 @@ if (is_linux || is_chromeos || is_win) {
       "//third_party/abseil-cpp/absl/flags:parse",
       "//third_party/libyuv",
     ]
+
+    deps += [ "//modules/audio_device:test_audio_device_module" ]
   }
 
   rtc_executable("peerconnection_server") {

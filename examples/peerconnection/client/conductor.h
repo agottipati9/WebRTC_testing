@@ -134,11 +134,17 @@ class Conductor : public webrtc::PeerConnectionObserver,
   // Send a message to the remote peer.
   void SendMessage(const std::string& json_object);
 
-  // For using prerecorded file as video source.
+  // For using prerecorded file as audio/video source.
+  std::string audio_file_path_ = "/users/agot/sample_media/audio.wav";
   std::string video_file_path_ = "/users/agot/sample_media/1080p.yuv";
   int video_width_ = 1920;
   int video_height_ = 1080;
   int video_fps_ = 30;
+  int audio_sample_rate_ = 48000;
+  int audio_channel_num_ = 2;
+
+  // for saving audio/video outputs
+  std::string output_audio_file_path_ = "/users/agot/outputs";
 
   int peer_id_;
   bool loopback_;

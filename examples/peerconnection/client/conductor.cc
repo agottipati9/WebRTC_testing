@@ -64,6 +64,9 @@
 #include "test/platform_video_capturer.h"
 #include "test/test_video_capturer.h"
 
+#include "modules/audio_device/include/audio_device.h"
+#include "modules/audio_device/include/test_audio_device.h"
+
 namespace {
 using webrtc::test::TestVideoCapturer;
 
@@ -214,7 +217,6 @@ bool Conductor::InitializePeerConnection() {
   webrtc::PeerConnectionFactoryDependencies deps;
   deps.signaling_thread = signaling_thread_.get();
   deps.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory(),
-  // Note: test machines do not support audio processing yet.
   deps.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
   deps.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
   deps.video_encoder_factory =
@@ -231,6 +233,17 @@ bool Conductor::InitializePeerConnection() {
           webrtc::Dav1dDecoderTemplateAdapter>>();
   webrtc::EnableMedia(deps);
   task_queue_factory_ = deps.task_queue_factory.get();
+
+  // create audio source from file
+  auto capturer = webrtc::TestAudioDeviceModule::CreateWavFileReader(
+      audio_file_path_, true);
+  std::unique_ptr<webrtc::TestAudioDeviceModule::Renderer> renderer = webrtc::TestAudioDeviceModule::CreateWavFileWriter(
+          output_audio_file_path_,
+          capturer.get()->SamplingFrequency(), capturer.get()->NumChannels());
+  rtc::scoped_refptr<webrtc::AudioDeviceModule> audio_device_module = webrtc::TestAudioDeviceModule::Create(
+        deps.task_queue_factory.get(), std::move(capturer), std::move(renderer));
+  deps.adm = audio_device_module;
+
   peer_connection_factory_ =
       webrtc::CreateModularPeerConnectionFactory(std::move(deps));
 
@@ -546,7 +559,6 @@ void Conductor::AddTracks() {
     return;  // Already added tracks.
   }
 
-  // NOTE: test machines do not support audio processing yet.
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
       peer_connection_factory_->CreateAudioTrack(
           kAudioLabel,
