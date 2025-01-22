@@ -139,6 +139,48 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
   std::unique_ptr<TestVideoCapturer> capturer_;
 };
 
+// For using prerecorded file as video source.
+class FrameGeneratorSource : public webrtc::VideoTrackSource {
+ public:
+  static rtc::scoped_refptr<FrameGeneratorSource> Create(
+      const std::string& video_path,
+      int width,
+      int height,
+      int fps,
+      webrtc::TaskQueueFactory* task_queue_factory) {
+    std::unique_ptr<webrtc::test::FrameGeneratorInterface> frame_generator(
+        webrtc::test::CreateFromYuvFileFrameGenerator(
+            std::vector<std::string>{video_path},
+            width,
+            height,
+            1 /*frame_repeat_count*/));
+
+    std::unique_ptr<webrtc::test::FrameGeneratorCapturer> capturer(
+        new webrtc::test::FrameGeneratorCapturer(
+            webrtc::Clock::GetRealTimeClock(),
+            std::move(frame_generator),
+            fps,
+            *task_queue_factory));
+
+    return rtc::make_ref_counted<FrameGeneratorSource>(std::move(capturer));
+  }
+
+ protected:
+  explicit FrameGeneratorSource(
+      std::unique_ptr<webrtc::test::FrameGeneratorCapturer> capturer)
+      : VideoTrackSource(/*remote=*/false), capturer_(std::move(capturer)) {
+    if (capturer_ && capturer_->Init()) {
+      capturer_->Start();
+    }
+  }
+
+ private:
+  rtc::VideoSourceInterface<webrtc::VideoFrame>* source() override {
+    return capturer_.get();
+  }
+  std::unique_ptr<webrtc::test::FrameGeneratorCapturer> capturer_;
+};
+
 }  // namespace
 
 Conductor::Conductor(PeerConnectionClient* client, MainWindow* main_wnd)
@@ -516,11 +558,19 @@ void Conductor::AddTracks() {
                       << result_or_error.error().message();
   }
 
-  rtc::scoped_refptr<CapturerTrackSource> video_device =
-      CapturerTrackSource::Create(*task_queue_factory_);
-  if (video_device) {
+  // Create video source from file
+  auto video_source = FrameGeneratorSource::Create(
+      video_file_path_,
+      video_width_,
+      video_height_,
+      video_fps_,
+      task_queue_factory_);
+
+  // rtc::scoped_refptr<CapturerTrackSource> video_device =
+  //     CapturerTrackSource::Create(*task_queue_factory_);
+  if (video_source) {
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
-        peer_connection_factory_->CreateVideoTrack(video_device, kVideoLabel));
+        peer_connection_factory_->CreateVideoTrack(video_source, kVideoLabel));
     main_wnd_->StartLocalRenderer(video_track_.get());
 
     result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});

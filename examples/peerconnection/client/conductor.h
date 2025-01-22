@@ -28,6 +28,9 @@
 #include "examples/peerconnection/client/peer_connection_client.h"
 #include "rtc_base/thread.h"
 
+#include "api/test/create_frame_generator.h"
+#include "test/frame_generator_capturer.h"
+
 namespace webrtc {
 class VideoCaptureModule;
 }  // namespace webrtc
@@ -50,6 +53,11 @@ class Conductor : public webrtc::PeerConnectionObserver,
   };
 
   Conductor(PeerConnectionClient* client, MainWindow* main_wnd);
+
+  // For using prerecorded file as video source.
+  void SetVideoFile(const std::string& file_path) {
+    video_file_path_ = file_path;
+  }
 
   bool connection_active() const;
 
@@ -126,6 +134,12 @@ class Conductor : public webrtc::PeerConnectionObserver,
   // Send a message to the remote peer.
   void SendMessage(const std::string& json_object);
 
+  // For using prerecorded file as video source.
+  std::string video_file_path_ = "/users/agot/sample_media/1080p.yuv";
+  int video_width_ = 1920;
+  int video_height_ = 1080;
+  int video_fps_ = 30;
+
   int peer_id_;
   bool loopback_;
   std::unique_ptr<rtc::Thread> signaling_thread_;
@@ -137,6 +151,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
   MainWindow* main_wnd_;
   std::deque<std::string*> pending_messages_;
   std::string server_;
+
+  std::shared_ptr<rtc::Event> audio_started_;
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_
