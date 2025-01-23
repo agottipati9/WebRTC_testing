@@ -144,7 +144,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   int audio_channel_num_ = 2;
 
   // for saving audio/video outputs
-  std::string output_audio_file_path_ = "/users/agot/outputs";
+  std::string output_audio_file_path_ = "/users/agot/outputs/output_audio.wav";
 
   int peer_id_;
   bool loopback_;
