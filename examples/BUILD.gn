@@ -792,6 +792,7 @@ if (is_linux || is_chromeos || is_win) {
     ]
 
     deps += [ "//modules/audio_device:test_audio_device_module" ]
+    deps += ["../test:video_frame_writer"]
   }
 
   rtc_executable("peerconnection_server") {

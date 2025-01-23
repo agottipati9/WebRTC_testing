@@ -30,6 +30,8 @@
 
 #include "api/test/create_frame_generator.h"
 #include "test/frame_generator_capturer.h"
+#include "test/testsupport/frame_writer.h"
+#include "test/testsupport/video_frame_writer.h"
 
 namespace webrtc {
 class VideoCaptureModule;
@@ -62,6 +64,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool connection_active() const;
 
   void Close() override;
+
+  void OnFrameCallback(const webrtc::VideoFrame& video_frame) override;
 
  protected:
   ~Conductor();
@@ -145,6 +149,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
 
   // for saving audio/video outputs
   std::string output_audio_file_path_ = "/users/agot/outputs/output_audio.wav";
+  std::string output_video_file_path_ = "/users/agot/outputs/output_video.yuv";
 
   int peer_id_;
   bool loopback_;
@@ -159,6 +164,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   std::string server_;
 
   std::shared_ptr<rtc::Event> audio_started_;
+  std::unique_ptr<webrtc::test::VideoFrameWriter> frame_writer_;
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_

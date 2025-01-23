@@ -188,6 +188,11 @@ class FrameGeneratorSource : public webrtc::VideoTrackSource {
 
 Conductor::Conductor(PeerConnectionClient* client, MainWindow* main_wnd)
     : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd) {
+
+  frame_writer_ = absl::make_unique<webrtc::test::YuvVideoFrameWriterImpl>(
+      output_video_file_path_, video_width_, video_height_);
+
+
   client_->RegisterObserver(this);
   main_wnd->RegisterObserver(this);
 }
@@ -673,6 +678,10 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
       RTC_DCHECK_NOTREACHED();
       break;
   }
+}
+
+void Conductor::OnFrameCallback(const webrtc::VideoFrame& video_frame) {
+  frame_writer_->WriteFrame(video_frame);
 }
 
 void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {

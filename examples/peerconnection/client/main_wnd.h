@@ -33,6 +33,8 @@ class MainWndCallback {
   virtual void UIThreadCallback(int msg_id, void* data) = 0;
   virtual void Close() = 0;
 
+  virtual void OnFrameCallback(const webrtc::VideoFrame& video_frame) = 0;
+
  protected:
   virtual ~MainWndCallback() {}
 };
