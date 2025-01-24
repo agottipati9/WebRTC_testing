@@ -90,9 +90,12 @@ int main(int argc, char* argv[]) {
   }
 
   const std::string server = absl::GetFlag(FLAGS_server);
+  // GtkMainWnd wnd(server.c_str(), absl::GetFlag(FLAGS_port),
+  //                absl::GetFlag(FLAGS_autoconnect),
+  //                absl::GetFlag(FLAGS_autocall));
   GtkMainWnd wnd(server.c_str(), absl::GetFlag(FLAGS_port),
-                 absl::GetFlag(FLAGS_autoconnect),
-                 absl::GetFlag(FLAGS_autocall));
+                true,
+                absl::GetFlag(FLAGS_autocall));
   wnd.Create();
 
   CustomSocketServer socket_server(&wnd);
