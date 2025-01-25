@@ -24,6 +24,23 @@
 #include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
 
+class VideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+ public:
+  VideoRenderer(webrtc::VideoTrackInterface* track_to_render,
+                MainWndCallback* callback)
+      : track_(track_to_render), callback_(callback) {
+    track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
+  }
+  ~VideoRenderer() { track_->RemoveSink(this); }
+  void OnFrame(const webrtc::VideoFrame& frame) {
+    callback_->OnFrameCallback(frame);
+  }
+
+ private:
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
+  MainWndCallback* callback_;
+};
+
 class HeadlessClient : public MainWindow {
 public:
     HeadlessClient(const char* server, int port, bool autoconnect, bool autocall) 
@@ -54,8 +71,8 @@ public:
     virtual MainWindow::UI current_ui() override { return CONNECT_TO_SERVER; }
     virtual void StartLocalRenderer(webrtc::VideoTrackInterface* local_video) override {}
     virtual void StopLocalRenderer() override {}
-    virtual void StartRemoteRenderer(webrtc::VideoTrackInterface* remote_video) override {}
-    virtual void StopRemoteRenderer() override {}
+    virtual void StartRemoteRenderer(webrtc::VideoTrackInterface* remote_video) override { remote_renderer_.reset(new VideoRenderer(remote_video, callback_)); }
+    virtual void StopRemoteRenderer() override { remote_renderer_.reset();}
     virtual void QueueUIThreadCallback(int msg_id, void* data) override {
         callback_->UIThreadCallback(msg_id, data);
     }
@@ -66,6 +83,7 @@ private:
     bool autoconnect_;
     bool autocall_;
     MainWndCallback* callback_;
+    std::unique_ptr<VideoRenderer> remote_renderer_;
 };
 
 class CustomHeadlessSocketServer : public rtc::PhysicalSocketServer {
@@ -92,6 +110,8 @@ class CustomHeadlessSocketServer : public rtc::PhysicalSocketServer {
   Conductor* conductor_;
   PeerConnectionClient* client_;
 };
+
+
 
 class CustomSocketServer : public rtc::PhysicalSocketServer {
  public:
@@ -130,6 +150,7 @@ class CustomSocketServer : public rtc::PhysicalSocketServer {
   PeerConnectionClient* client_;
 };
 
+// // Run with GUI
 // int main(int argc, char* argv[]) {
 //   gtk_init(&argc, &argv);
 // // g_type_init API is deprecated (and does nothing) since glib 2.35.0, see:
@@ -183,6 +204,8 @@ class CustomSocketServer : public rtc::PhysicalSocketServer {
 //   return 0;
 // }
 
+
+// // Run in Headless
 int main(int argc, char* argv[]) {
 // g_type_init API is deprecated (and does nothing) since glib 2.35.0, see:
 // https://mail.gnome.org/archives/commits-list/2012-November/msg07809.html
