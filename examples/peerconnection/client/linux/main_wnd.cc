@@ -494,8 +494,8 @@ void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
   }
   SetSize(buffer->width(), buffer->height());
 
-  // write frame to local file for caller
-  // if (main_wnd_->is_caller_) {
+  // write frame to local file for callee
+  // if (!main_wnd_->is_caller_) {
   //   main_wnd_->callback_->OnFrameCallback(video_frame);
   // }
 
