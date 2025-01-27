@@ -135,16 +135,18 @@ void PeerConnectionClient::DoConnect() {
   onconnect_data_ = buffer;
 
   bool ret = ConnectControlSocket();
-  if (ret)
+  if (ret) {
     state_ = SIGNING_IN;
+  }
   if (!ret) {
     callback_->OnServerConnectionFailure();
   }
 }
 
 bool PeerConnectionClient::SendToPeer(int peer_id, const std::string& message) {
-  if (state_ != CONNECTED)
+  if (state_ != CONNECTED) {
     return false;
+  }
 
   RTC_DCHECK(is_connected());
   RTC_DCHECK(control_socket_->GetState() == rtc::Socket::CS_CLOSED);
