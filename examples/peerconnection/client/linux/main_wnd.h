@@ -39,7 +39,7 @@ typedef struct _cairo cairo_t;
 // implementation.
 class GtkMainWnd : public MainWindow {
  public:
-  GtkMainWnd(const char* server, int port, bool autoconnect, bool autocall);
+  GtkMainWnd(const char* server, int port, bool autoconnect, bool autocall, bool is_caller);
   ~GtkMainWnd();
 
   virtual void RegisterObserver(MainWndCallback* callback);
@@ -125,6 +125,7 @@ class GtkMainWnd : public MainWindow {
   int height_ = 0;
   rtc::Buffer draw_buffer_;
   int draw_buffer_size_;
+  bool is_caller_;
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_LINUX_MAIN_WND_H_

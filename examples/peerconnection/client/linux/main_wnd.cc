@@ -153,7 +153,8 @@ gboolean Draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
 GtkMainWnd::GtkMainWnd(const char* server,
                        int port,
                        bool autoconnect,
-                       bool autocall)
+                       bool autocall,
+                       bool is_caller)
     : window_(NULL),
       draw_area_(NULL),
       vbox_(NULL),
@@ -167,6 +168,7 @@ GtkMainWnd::GtkMainWnd(const char* server,
   char buffer[10];
   snprintf(buffer, sizeof(buffer), "%i", port);
   port_ = buffer;
+  is_caller_ = is_caller;
 }
 
 GtkMainWnd::~GtkMainWnd() {
@@ -491,6 +493,11 @@ void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
     buffer = webrtc::I420Buffer::Rotate(*buffer, video_frame.rotation());
   }
   SetSize(buffer->width(), buffer->height());
+
+  // write frame to local file for caller
+  // if (main_wnd_->is_caller_) {
+  //   main_wnd_->callback_->OnFrameCallback(video_frame);
+  // }
 
   // TODO(bugs.webrtc.org/6857): This conversion is correct for little-endian
   // only. Cairo ARGB32 treats pixels as 32-bit values in *native* byte order,

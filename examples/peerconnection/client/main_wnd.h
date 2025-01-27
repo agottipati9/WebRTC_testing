@@ -82,7 +82,7 @@ class MainWnd : public MainWindow {
     UI_THREAD_CALLBACK = WM_APP + 1,
   };
 
-  MainWnd(const char* server, int port, bool auto_connect, bool auto_call);
+  MainWnd(const char* server, int port, bool auto_connect, bool auto_call, bool is_caller);
   ~MainWnd();
 
   bool Create();
@@ -202,6 +202,7 @@ class MainWnd : public MainWindow {
   std::string port_;
   bool auto_connect_;
   bool auto_call_;
+  bool is_caller_;
 };
 #endif  // WIN32
 

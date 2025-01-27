@@ -181,9 +181,13 @@ int main(int argc, char* argv[]) {
   }
 
   const std::string server = absl::GetFlag(FLAGS_server);
+
+  bool is_caller = absl::GetFlag(FLAGS_autocall);
+
   GtkMainWnd wnd(server.c_str(), absl::GetFlag(FLAGS_port),
                 true,
-                absl::GetFlag(FLAGS_autocall));
+                absl::GetFlag(FLAGS_autocall),
+                is_caller);
   wnd.Create();
 
   CustomSocketServer socket_server(&wnd);
