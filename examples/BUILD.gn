@@ -681,6 +681,7 @@ if (is_linux || is_chromeos || is_win) {
       "peerconnection/client/defaults.h",
       "peerconnection/client/peer_connection_client.cc",
       "peerconnection/client/peer_connection_client.h",
+      "peerconnection/client/stats_observer.h",
     ]
 
     deps = [
@@ -793,6 +794,7 @@ if (is_linux || is_chromeos || is_win) {
 
     deps += [ "//modules/audio_device:test_audio_device_module" ]
     deps += ["../test:video_frame_writer"]
+    deps += ["../api:rtc_stats_api"]
   }
 
   rtc_executable("peerconnection_server") {

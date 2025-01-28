@@ -67,6 +67,8 @@
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/test_audio_device.h"
 
+#include "examples/peerconnection/client/stats_observer.h"
+
 namespace {
 using webrtc::test::TestVideoCapturer;
 
@@ -306,6 +308,8 @@ bool Conductor::CreatePeerConnection() {
           config, std::move(pc_dependencies));
   if (error_or_peer_connection.ok()) {
     peer_connection_ = std::move(error_or_peer_connection.value());
+    // Register the stats observer to get the stats.
+    StartStatsCollection(peer_connection_);
   }
   return peer_connection_ != nullptr;
 }
