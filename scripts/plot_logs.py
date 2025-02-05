@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-WEBRTC_DF_OUTPUT = "/users/agot/outputs/all_data.csv"
-WEBRTC_OUTPUT_FOLDER = "/users/agot/outputs/"
+WEBRTC_DF_OUTPUT = "/opt/home_dir/outputs/all_data.csv"
+WEBRTC_OUTPUT_FOLDER = "/opt/home_dir/outputs/"
 
 def analyze_kpi_metrics(df):
     # Create a copy to avoid modifying the original dataframe

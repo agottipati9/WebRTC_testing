@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-TRACE_DIR="/users/$USER/network_traces/mahimahi"
-# TRACE_DIR="/users/${USER}/toy_trace"
-WEBRTC_PATH="/users/${USER}/webrtc-checkout/src/out/Default"
+TRACE_DIR="/opt/home_dir/network_traces/mahimahi"
+# TRACE_DIR="/opt/home_dir/toy_trace"
+WEBRTC_PATH="/opt/home_dir/webrtc-checkout/src/out/Default"
 CALL_DURATION=120
 CLEANUP_DELAY=10
 SETUP_DELAY=3
 MAHIMAHI_BASE="10.0.0.1"
-OUTPUT_DIR="/users/${USER}/outputs/"
+OUTPUT_DIR="/opt/home_dir/outputs/"
 
 # Cleanup function
 cleanup() {

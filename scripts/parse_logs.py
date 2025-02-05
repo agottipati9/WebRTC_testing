@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from typing import Dict, List
 
-WEBRTC_OUTPUT_LOGS = "/users/agot/outputs/"
+WEBRTC_OUTPUT_LOGS = "/opt/home_dir/outputs/"
 
 def parse_webrtc_logs(log_content: str) -> pd.DataFrame:
     """
