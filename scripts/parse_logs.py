@@ -26,6 +26,8 @@ def parse_webrtc_logs(log_content: str) -> pd.DataFrame:
     freeze_rate_pattern = r"Freeze Rate: ([\d.]+)"
     freeze_duration_pattern = r"Total Freeze Duration: ([\d.]+)"
     frame_delay_pattern = r"Total Inter Frame Delay: ([\d.]+)"
+    rtt_pattern = r"Round Trip Time: ([\d.]+)"
+
 
     # Split logs into sections by timestamp
     sections = log_content.split("PeerConnection Stats Report received")
@@ -62,7 +64,8 @@ def parse_webrtc_logs(log_content: str) -> pd.DataFrame:
             freeze_rate_match = re.search(freeze_rate_pattern, section_text)
             freeze_duration_match = re.search(freeze_duration_pattern, section_text)
             frame_delay_match = re.search(frame_delay_pattern, section_text)
-            
+            rtt_match = re.search(rtt_pattern, section_text)
+
             if not all([packets_match, jitter_match]):
                 continue
                 
@@ -71,6 +74,7 @@ def parse_webrtc_logs(log_content: str) -> pd.DataFrame:
                 'receiving_rate_mbps': receiving_rate,
                 'packets_lost': int(packets_match.group(1)),
                 'jitter': float(jitter_match.group(1)),
+                'rtt': float(rtt_match.group(1)) if rtt_match else None,
                 'fps': int(fps_match.group(1)) if fps_match else None,
                 'freeze_rate': float(freeze_rate_match.group(1)) if freeze_rate_match else None,
                 'freeze_duration': float(freeze_duration_match.group(1)) if freeze_duration_match else None,

@@ -8,8 +8,18 @@
 
 class StatsObserver : public webrtc::RTCStatsCollectorCallback {
  public:
+ // transport metrics
   double previous_timestamp = 0.0;
   double previous_bytes_received = 0.0;
+  double previous_bitrate = 0.0;
+  double previous_rtt = 0.0;
+  double previous_jitter = 0.0;
+  uint32_t previous_packets_lost = 0;
+  // video specific metrics
+  double previous_frame_rate = 0.0;
+  double previous_total_freeze_duration = 0.0;
+  double previous_total_inter_frame_delay = 0.0;
+  uint32_t previous_freeze_rate = 0;
 
   static rtc::scoped_refptr<StatsObserver> Create() {
     return rtc::scoped_refptr<StatsObserver>(
@@ -31,7 +41,9 @@ class StatsObserver : public webrtc::RTCStatsCollectorCallback {
     const std::string type = stat.type();
     if (type == "inbound-rtp") {
       ProcessInboundRTPStats(stat);
-    } 
+    } else if (type == "remote-inbound-rtp") {
+      ProcessRemoteInboundRTPStats(stat);
+    }
     // else if (type == "outbound-rtp") {
     //   ProcessOutboundRTPStats(stat);
     // } else if (type == "candidate-pair") {
@@ -44,10 +56,37 @@ class StatsObserver : public webrtc::RTCStatsCollectorCallback {
     return attr.has_value() ? attr.get<T>() : defaultValue;
   }
 
+  void ProcessRemoteInboundRTPStats(const webrtc::RTCStats& stat) {
+    const auto& rtp_inbound = stat.cast_to<webrtc::RTCRemoteInboundRtpStreamStats>();
+
+    RTC_LOG(LS_INFO) << "********LOGGING INBOUND REMOTE RTP STATS********";
+
+    // transport metrics
+    // auto total_rtt = stat.GetAttribute(rtp_inbound.total_round_trip_time);
+    // auto n_rtt_measurements = stat.GetAttribute(rtp_inbound.round_trip_time_measurements);
+    auto rtt = stat.GetAttribute(rtp_inbound.round_trip_time);
+
+    // rtt calculation
+    // if (total_rtt.holds_alternative<double>() && 
+    //     total_rtt.has_value() && n_rtt_measurements.holds_alternative<uint64_t>() && n_rtt_measurements.has_value()) {
+    //   double avg_rtt = total_rtt.get<double>() / n_rtt_measurements.get<uint64_t>();
+    //   RTC_LOG(LS_INFO) << "Average Round Trip Time: " << avg_rtt;
+    // } else {
+    //   RTC_LOG(LS_INFO) << "Total Round Trip Time: NAN";
+    // }  
+    if (rtt.holds_alternative<double>() && 
+        rtt.has_value()) {
+          previous_rtt = rtt.get<double>();
+      RTC_LOG(LS_INFO) << "Round Trip Time: " << rtt.get<double>();
+    } else {
+      RTC_LOG(LS_INFO) << "Round Trip Time: " << previous_rtt;
+    }
+}
+
   void ProcessInboundRTPStats(const webrtc::RTCStats& stat) {
     const auto& inbound = stat.cast_to<webrtc::RTCInboundRtpStreamStats>();
 
-          RTC_LOG(LS_INFO) << "********LOGGING INBOUND TRANSPORT RTP STATS********";
+    RTC_LOG(LS_INFO) << "********LOGGING INBOUND TRANSPORT RTP STATS********";
 
 
  // transport metrics
@@ -74,26 +113,29 @@ class StatsObserver : public webrtc::RTCStatsCollectorCallback {
         if (bitrate < 1e-6) { 
           RTC_LOG(LS_INFO) << "Receiving Rate: " << "NAN" << " Mbps";
         } else {
-          RTC_LOG(LS_INFO) << "Receiving Rate: " << bitrate << " Mbps";  
+          RTC_LOG(LS_INFO) << "Receiving Rate: " << bitrate << " Mbps";
+          previous_bitrate = bitrate;
         }
         previous_timestamp = current_timestamp;
         previous_bytes_received = current_bytes_received;
       } else {
-        RTC_LOG(LS_INFO) << "Receiving Rate: 0 Mbps";
+        RTC_LOG(LS_INFO) << "Receiving Rate: " << previous_bitrate << " Mbps";
       }
 
       if (packetsLost.holds_alternative<uint32_t>() && 
           packetsLost.has_value()) {
+          previous_packets_lost = packetsLost.get<uint32_t>();
         RTC_LOG(LS_INFO) << "Packets Lost: " << packetsLost.get<uint32_t>();
       } else {
-        RTC_LOG(LS_INFO) << "Packets Lost: 0";
+        RTC_LOG(LS_INFO) << "Packets Lost: " << previous_packets_lost;
       }
 
       if (jitter.holds_alternative<double>() && 
           jitter.has_value()) {
+        previous_jitter = jitter.get<double>();
         RTC_LOG(LS_INFO) << "Jitter: " << jitter.get<double>();
       } else {
-        RTC_LOG(LS_INFO) << "Jitter: 0.0";
+        RTC_LOG(LS_INFO) << "Jitter: " << previous_jitter;
       }
 
     auto kind = stat.GetAttribute(inbound.kind);
@@ -108,30 +150,34 @@ class StatsObserver : public webrtc::RTCStatsCollectorCallback {
 
       if (framesPerSecond.holds_alternative<double>() && 
           framesPerSecond.has_value()) {
+            previous_frame_rate = framesPerSecond.get<double>();
         RTC_LOG(LS_INFO) << "Frames per Second: " << framesPerSecond.get<double>();
       } else {
-        RTC_LOG(LS_INFO) << "Frames per Second: NA";
+        RTC_LOG(LS_INFO) << "Frames per Second: " << previous_frame_rate;
       }
 
       if (freezeCount.holds_alternative<uint32_t>() && 
           freezeCount.has_value()) {
+            previous_freeze_rate = freezeCount.get<uint32_t>();
         RTC_LOG(LS_INFO) << "Freeze Rate: " << freezeCount.get<uint32_t>();
       } else {
-        RTC_LOG(LS_INFO) << "Freeze Rate: 0";
+        RTC_LOG(LS_INFO) << "Freeze Rate: " << previous_freeze_rate;
       }
 
       if (totalFreezeDuration.holds_alternative<double>() && 
           totalFreezeDuration.has_value()) {
+            previous_total_freeze_duration = totalFreezeDuration.get<double>();
         RTC_LOG(LS_INFO) << "Total Freeze Duration: " << totalFreezeDuration.get<double>();
       } else {
-        RTC_LOG(LS_INFO) << "Total Freeze Duration: 0.0";
+        RTC_LOG(LS_INFO) << "Total Freeze Duration: " << previous_total_freeze_duration;
       }
 
       if (totalInterFrameDelay.holds_alternative<double>() && 
           totalInterFrameDelay.has_value()) {
+            previous_total_inter_frame_delay = totalInterFrameDelay.get<double>();
         RTC_LOG(LS_INFO) << "Total Inter Frame Delay: " << totalInterFrameDelay.get<double>();
       } else {
-        RTC_LOG(LS_INFO) << "Total Inter Frame Delay: 0.0";
+        RTC_LOG(LS_INFO) << "Total Inter Frame Delay: " << previous_total_inter_frame_delay;
       }
     }
   }
