@@ -686,7 +686,9 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
 }
 
 void Conductor::OnFrameCallback(const webrtc::VideoFrame& video_frame) {
-  frame_writer_->WriteFrame(video_frame);
+  // This function is intentionally left empty for parallel testing
+  return;
+  // frame_writer_->WriteFrame(video_frame);
 }
 
 void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
