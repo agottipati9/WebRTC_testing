@@ -13,6 +13,11 @@ do
 key="$1"
 
 case $key in
+    --id)
+    display_id="$2"
+    shift # past argument
+    shift # past value
+    ;;
     --trace)
     trace_file="$2"
     shift # past argument
@@ -29,9 +34,9 @@ case $key in
 esac
 done
 
-
 cleanup() {
     pkill -f "peerconnection_.*--port ${PORT}" || true
+    pkill -f "Xvfb :${xvfb_display_id}" || true
 }
 trap cleanup EXIT SIGINT SIGTERM
 
@@ -39,7 +44,12 @@ delay=40
 up_pkt_loss=0
 down_pkt_loss=0
 
-export DISPLAY=:99
+# create a new display for this process
+xvfb_display_id=$((99 + 1 + ${display_id}))
+export DISPLAY=:${xvfb_display_id}
+Xvfb :${xvfb_display_id} -screen 0 1920x1080x24 &
+sleep 5
+
 
 ${WEBRTC_PATH}/peerconnection_server --port ${PORT} > /dev/null 2>&1 & echo $! > /tmp/server_pid_${PORT}
 SERVER_PID=$(cat /tmp/server_pid_${PORT})
@@ -53,6 +63,7 @@ bash -c "${WEBRTC_PATH}/peerconnection_client --server \$MAHIMAHI_BASE --port ${
 CLIENT_TWO_PID=$(cat /tmp/cl2_pid_${PORT})
 echo "Running call... Sleeping for ${CALL_DURATION} seconds"
 sleep "${CALL_DURATION}"  # let the call run for 2 minutes
+# remove processes
 cleanup
 sleep "${CLEANUP_DELAY}"  # wait for everything to close before starting the next one
 
