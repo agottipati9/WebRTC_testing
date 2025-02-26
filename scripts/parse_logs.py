@@ -119,11 +119,15 @@ if __name__ == "__main__":
     # Parse logs into DataFrame
     print("\nParsing WebRTC logs...")
     for log_file in log_files:
-        print(f"Processing log file: {log_file}")
-        with open(f'{WEBRTC_OUTPUT_LOGS}{log_file}', 'r') as f:
-            log_content = f.read()
-            df = parse_webrtc_logs(log_content)
-            all_dfs.append(df)
+        try:
+            print(f"Processing log file: {log_file}")
+            with open(f'{WEBRTC_OUTPUT_LOGS}{log_file}', 'r') as f:
+                log_content = f.read()
+                df = parse_webrtc_logs(log_content)
+                all_dfs.append(df)
+        except Exception as e:
+            print(f"Error processing log file: {e}")
+            continue
 
     # Save all dataframes to a single csv file
     print("\nSaving all data to a single csv file...")
