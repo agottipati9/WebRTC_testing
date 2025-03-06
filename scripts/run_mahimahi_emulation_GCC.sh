@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-TRACE_DIR="/opt/home_dir/network_traces/mahimahi"
+TRACE_DIR="/opt/home_dir/network_traces/rtc_val"
 # TRACE_DIR="/opt/home_dir/toy_trace"
 WEBRTC_PATH="/opt/home_dir/webrtc-checkout/src/out/Default"
 CALL_DURATION=120
